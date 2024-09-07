@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>My Notes</h1>
+  <ul id="notesList"></ul>
+  <textarea id="noteInput" placeholder="Type your note here..."></textarea>
+  <button onclick="addNote()">Add Note</button>
+
+  <script type="module">
+    import { supabase } from './supabase.js';
+    import { initIndexedDB, saveNoteToIndexedDB, loadNotesFromIndexedDB } from './indexedDB.js';
+
+    // Add a note
+    async function addNote() {
+      const noteContent = document.getElementById('noteInput').value;
+      if (noteContent) {
+        await addNoteToSupabase(noteContent); // Add note to Supabase and IndexedDB
+        document.getElementById('noteInput').value = ''; // Clear the input
+      }
+    }
+
+    // Load notes on page load
+    window.onload = () => {
+      loadNotesFromIndexedDB(); // Load notes from IndexedDB for offline use
+      if (navigator.onLine) {
+        syncNotesWithSupabase(); // Sync with Supabase when online
+      }
+    };
+
+    // Display notes in UI
+    function displayNotes(notes) {
+      const notesList = document.getElementById('notesList');
+      notesList.innerHTML = '';
+      notes.forEach(note => {
+        const li = document.createElement('li');
+        li.textContent = note.content;
+        notesList.appendChild(li);
+      });
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('ServiceWorker registration successful:', registration);
+        })
+        .catch((error) => {
+          console.log('ServiceWorker registration failed:', error);
+        });
+    }
+  </script>
+</body>
+</html>
